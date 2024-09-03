@@ -11,6 +11,7 @@ test_cases = [[(1, 3, 0.7), (2, 3, 0.4), (3, 3, 0.9)],
               [(1.5, 1.5, 1.3), (4, 4, 0.7)], 
               [(0.5, 0.5, 0.5), (1.5, 1.5, 1.1), (0.7, 0.7, 0.4), (4, 4, 0.7)],
               [(2.5, 2.5, 1.5), (2.5, 2.5, 1), (2.5, 2.5, .5)]]
+
 index = 0
 
 # function that takes in a list and adds the test cases to the graph
@@ -34,12 +35,16 @@ def graph_circles(circles):
         # Add grid for better visualization
         ax.grid(True)
 
-        # Send to cluster_check for T/F output
-        cluster_check(circles)
-        plt.title("Clustered: True")
-
         # Draw out the graph
         plt.draw()
+
+    # Send to cluster_check for T/F output
+    if cluster_check(circles) == True:
+        plt.title("Clustered: True")
+    else:
+        plt.title("Clustered: False")
+    #plt.title("Clustered: True")
+
 
 # Check Graph for Cluster
 def cluster_check(circles):
@@ -53,7 +58,7 @@ def cluster_check(circles):
         # Modified to return false instantly on the first iteration of there's no connections
 
     # Vars for comparison
-    x1, x2, y1, y2, r1, r2
+    #x1, x2, y1, y2, r1, r2
 
     # List to keep track of visited circles 
     visited = [False] * len(circles)
@@ -62,23 +67,67 @@ def cluster_check(circles):
     stack = []
 
     # iterate through circle 0 connections and initialize the stack with that 
-    i = 0
-    while i < len(circles):
-        
+    x1 = circles[0][0]
+    y1 = circles[0][1]
+    r1 = circles[0][2]
 
-        i += 1
+    visited[0] = True
 
-    # Main DFT control will run as long as there's a connection in the stack or until returned
-    while stack: # run until returned
-        i = 0
-        
+    i = len(circles) - 1
+    while i > 0:
+        x2 = circles[i][0]
+        y2 = circles[i][1]
+        r2 = circles[i][2]
+
+        # Equation for computing distance 
+        distance = math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
+
+        # If distance is less than the sum of the current radius then push that circle on the stack as these two are circles are intersecting
+        # They get pushed as to check the next cirlces on the stack for insterction in order to minimize comparisons
+        if distance < r1 + r2 and distance + min(r1, r2) > max(r1, r2):
+            stack.append(i) # Push i into the stack for circles to traverse
+            visited[i] = True # They are intersected so mark the circles are visited
+
+        i -= 1
 
     # If all circles have been visited then return true as the graph is clustered
+    # If no circles have been visited then the first circle is not clusted and just return false 
     if visited == [True] * len(circles):
         return True
-    
-    # Equation for computing distance 
-    distance = math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
+    elif visited == [False] * len(circles):
+        return False
+
+    # Main DFT control will run as long as there's a connection in the stack or until returned
+    while stack: # run until stack is empty
+        i = stack[0]
+        stack.pop()
+
+        x1 = circles[i][0]
+        y1 = circles[i][1]
+        r1 = circles[i][2]
+
+        # Now check the non visited circles for intersection
+        if visited == [True] * len(circles):
+            return True
+        else:
+            first_non_visited = visited.index(False)
+
+        x2 = circles[first_non_visited][0]
+        y2 = circles[first_non_visited][1]
+        r2 = circles[first_non_visited][2]
+        
+        # Equation for computing distance 
+        distance = math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
+
+        if distance < r1 + r2 and distance + min(r1, r2) > max(r1, r2):
+            stack.append(first_non_visited) # Push i into the stack for circles to traverse
+            visited[first_non_visited] = True # They are intersected so mark the circles are visited
+
+    # If all circles have been visited then return true as the graph is clustered else return false
+    if visited == [True] * len(circles):
+        return True
+    else:
+        return False
     
 
 
